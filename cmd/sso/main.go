@@ -1,7 +1,14 @@
 package main
 
+import (
+	"fmt"
+	"sso/internal/config"
+)
+
 func main() {
-	// TODO ініціювати обєкт конфігурації
+	cfg := config.MustLoad()
+
+	fmt.Println(cfg)
 	// TODO ініціювати логер
 	// TODO ініціювати додаток ( app )
 	// TODO запуск gRPC-сервера
