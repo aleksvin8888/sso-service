@@ -3,6 +3,8 @@ package app
 import (
 	"log/slog"
 	grpcapp "sso/internal/app/grpc"
+	"sso/internal/services/auth"
+	"sso/internal/storage/sqlite"
 	"time"
 )
 
@@ -11,11 +13,20 @@ type App struct {
 }
 
 func New(log *slog.Logger, grpcPort int, storagePath string, tokenTTL time.Duration) *App {
-	// TODO ініціювати сховище
-	// TODO ініціювати сервісний слой auth service
 
-	grpcApp := grpcapp.New(log, grpcPort)
+	storage, err := sqlite.New(storagePath)
+	if err != nil {
+		panic(err)
+	}
+	log.Info("Initialise storage successful")
 
+	authService := auth.New(log, storage, storage, storage, tokenTTL)
+
+	log.Info("Initialise Auth Service successful")
+
+	grpcApp := grpcapp.New(log, authService, grpcPort)
+
+	log.Info("Initialise GRPC server successful")
 	return &App{
 		GRPCSrv: grpcApp,
 	}
