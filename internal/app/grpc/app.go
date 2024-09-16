@@ -3,6 +3,7 @@ package grpcapp
 import (
 	"context"
 	"fmt"
+	"github.com/go-playground/validator/v10"
 	"google.golang.org/grpc"
 	"log/slog"
 	"net"
@@ -25,7 +26,9 @@ type Auth interface {
 func New(log *slog.Logger, authService Auth, port int) *App {
 	gRPCServer := grpc.NewServer()
 
-	authgrpc.Register(gRPCServer, authService)
+	validate := validator.New(validator.WithRequiredStructEnabled())
+
+	authgrpc.Register(gRPCServer, authService, validate)
 
 	return &App{
 		log:        log,

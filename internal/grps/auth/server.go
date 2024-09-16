@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	ssov1 "github.com/aleksvin8888/sso-protos/gen/go/sso"
+	"github.com/go-playground/validator/v10"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,17 +23,20 @@ type Auth interface {
 
 type serverAPI struct {
 	ssov1.UnimplementedAuthServer
-	auth Auth
+	auth     Auth
+	validate *validator.Validate
 }
 
-func Register(gRPC *grpc.Server, auth Auth) {
-	ssov1.RegisterAuthServer(gRPC, &serverAPI{auth: auth})
+func Register(gRPC *grpc.Server, auth Auth, validate *validator.Validate) {
+	ssov1.RegisterAuthServer(gRPC, &serverAPI{
+		auth:     auth,
+		validate: validate,
+	})
 }
 
 func (s *serverAPI) Login(ctx context.Context, req *ssov1.LoginRequest) (*ssov1.LoginResponse, error) {
 
-	// TODO винести валідацію req у окремий пакет
-	if err := validateLogin(req); err != nil {
+	if err := validateLogin(req, s.validate); err != nil {
 		return nil, err
 	}
 
@@ -51,8 +55,8 @@ func (s *serverAPI) Login(ctx context.Context, req *ssov1.LoginRequest) (*ssov1.
 }
 
 func (s *serverAPI) Register(ctx context.Context, req *ssov1.RegisterRequest) (*ssov1.RegisterResponse, error) {
-	// TODO винести валідацію req у окремий пакет
-	if err := validateRegister(req); err != nil {
+
+	if err := validateRegister(req, s.validate); err != nil {
 		return nil, err
 	}
 
@@ -70,8 +74,8 @@ func (s *serverAPI) Register(ctx context.Context, req *ssov1.RegisterRequest) (*
 }
 
 func (s *serverAPI) IsAdmin(ctx context.Context, req *ssov1.IsAdminRequest) (*ssov1.IsAdminResponse, error) {
-	// TODO винести валідацію req у окремий пакет
-	if err := validateIsAdmin(req); err != nil {
+
+	if err := validateIsAdmin(req, s.validate); err != nil {
 		return nil, err
 	}
 
@@ -88,33 +92,50 @@ func (s *serverAPI) IsAdmin(ctx context.Context, req *ssov1.IsAdminRequest) (*ss
 	}, nil
 }
 
-func validateLogin(req *ssov1.LoginRequest) error {
-	if req.GetEmail() == "" {
+func validateLogin(req *ssov1.LoginRequest, validate *validator.Validate) error {
+
+	if err := validate.Var(req.GetEmail(), "required"); err != nil {
 		return status.Error(codes.InvalidArgument, "email is required")
 	}
-	if req.GetPassword() == "" {
+
+	if err := validate.Var(req.GetEmail(), "email"); err != nil {
+		return status.Error(codes.InvalidArgument, "email is invalid")
+	}
+
+	if err := validate.Var(req.GetPassword(), "required"); err != nil {
 		return status.Error(codes.InvalidArgument, "password is required")
 	}
-	if req.GetAppId() == emptyValue {
+
+	if err := validate.Var(req.GetAppId(), "required"); err != nil {
 		return status.Error(codes.InvalidArgument, "app_id is required")
 	}
 
 	return nil
 }
 
-func validateRegister(req *ssov1.RegisterRequest) error {
-	if req.GetEmail() == "" {
+func validateRegister(req *ssov1.RegisterRequest, validate *validator.Validate) error {
+	if err := validate.Var(req.GetEmail(), "required"); err != nil {
 		return status.Error(codes.InvalidArgument, "email is required")
 	}
-	if req.GetPassword() == "" {
+
+	if err := validate.Var(req.GetEmail(), "email"); err != nil {
+		return status.Error(codes.InvalidArgument, "email is invalid")
+	}
+
+	if err := validate.Var(req.GetPassword(), "required"); err != nil {
 		return status.Error(codes.InvalidArgument, "password is required")
+	}
+
+	if err := validate.Var(req.GetPassword(), "min=8"); err != nil {
+		return status.Error(codes.InvalidArgument, "password is required min 8 symbols")
 	}
 
 	return nil
 }
 
-func validateIsAdmin(req *ssov1.IsAdminRequest) error {
-	if req.GetUserId() == emptyValue {
+func validateIsAdmin(req *ssov1.IsAdminRequest, validate *validator.Validate) error {
+
+	if err := validate.Var(req.GetUserId(), "required"); err != nil {
 		return status.Error(codes.InvalidArgument, "user_id is required")
 	}
 

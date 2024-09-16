@@ -101,6 +101,12 @@ func TestRegister_FailCases(t *testing.T) {
 			expectedErr: "password is required",
 		},
 		{
+			name:        "Register with short password",
+			email:       gofakeit.Email(),
+			password:    "1234",
+			expectedErr: "password is required min 8 symbols",
+		},
+		{
 			name:        "Register with empty email",
 			email:       "",
 			password:    randomFakePassword(),
@@ -111,6 +117,36 @@ func TestRegister_FailCases(t *testing.T) {
 			email:       "",
 			password:    "",
 			expectedErr: "email is required",
+		},
+		{
+			name:        "Login with invalid email",
+			email:       "s;obas;dfjklbn",
+			password:    randomFakePassword(),
+			expectedErr: "email is invalid",
+		},
+		{
+			name:        "Login with invalid email use @",
+			email:       "use @",
+			password:    randomFakePassword(),
+			expectedErr: "email is invalid",
+		},
+		{
+			name:        "Login with invalid email use%@",
+			email:       "use%@",
+			password:    randomFakePassword(),
+			expectedErr: "email is invalid",
+		},
+		{
+			name:        "Login with invalid email ` OR id = 1",
+			email:       "` OR id = 1",
+			password:    randomFakePassword(),
+			expectedErr: "email is invalid",
+		},
+		{
+			name:        "Login with invalid email user@gmail.com",
+			email:       "user@gmail",
+			password:    randomFakePassword(),
+			expectedErr: "email is invalid",
 		},
 	}
 
@@ -149,6 +185,41 @@ func TestLogin_FailCases(t *testing.T) {
 			password:    randomFakePassword(),
 			appID:       appID,
 			expectedErr: "email is required",
+		},
+		{
+			name:        "Login with invalid email",
+			email:       "s;obas;dfjklbn",
+			password:    randomFakePassword(),
+			appID:       appID,
+			expectedErr: "email is invalid",
+		},
+		{
+			name:        "Login with invalid email use @",
+			email:       "use @",
+			password:    randomFakePassword(),
+			appID:       appID,
+			expectedErr: "email is invalid",
+		},
+		{
+			name:        "Login with invalid email use%@",
+			email:       "use%@",
+			password:    randomFakePassword(),
+			appID:       appID,
+			expectedErr: "email is invalid",
+		},
+		{
+			name:        "Login with invalid email ` OR id = 1",
+			email:       "` OR id = 1",
+			password:    randomFakePassword(),
+			appID:       appID,
+			expectedErr: "email is invalid",
+		},
+		{
+			name:        "Login with invalid email user@gmail.com",
+			email:       "user@gmail",
+			password:    randomFakePassword(),
+			appID:       appID,
+			expectedErr: "email is invalid",
 		},
 		{
 			name:        "Login with both empty email and password",
